@@ -1,31 +1,38 @@
+# mkdir -p build
+# cd build
+# cmake ..
+# make -j$(nproc)
+
 cmake_minimum_required(VERSION 3.10)
 project(camera_capture)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find NCNN
+# Packages
 set(ncnn_DIR "/home/pi/ncnn/build/install/lib/cmake/ncnn")
+find_package(PkgConfig)
 find_package(ncnn REQUIRED)
-if(ncnn_FOUND)
-    message(STATUS "ncnn found: ${ncnn_INCLUDE_DIRS}")
-else()
-    message(FATAL_ERROR "ncnn not found")
-endif()
+pkg_check_modules(TURBOJPEG REQUIRED IMPORTED_TARGET libturbojpeg)
+pkg_check_modules(LIBCAMERA REQUIRED IMPORTED_TARGET libcamera)
+pkg_check_modules(OPENCV REQUIRED IMPORTED_TARGET opencv4)
+pkg_check_modules(LIBEVENT REQUIRED IMPORTED_TARGET libevent_pthreads)
 
-
-add_executable(${PROJECT_NAME} camera_capture.cpp ncnn_inference.cpp)
-
-target_link_libraries(${PROJECT_NAME}
-    camera
-    camera-base
-    turbojpeg
-    ncnn
-    #${ncnn_LIBRARIES}
+#For good measure, we will include the directories as well /usr/include/libcamera
+include_directories(
+    ${CMAKE_SOURCE_DIR}
+    ${LIBCAMERA_INCLUDE_DIRS} 
+    ${LIBEVENT_INCLUDE_DIRS}
+    ${ncnn_INCLUDE_DIRS}
+    ${OPENCV_INCLUDE_DIRS}
+    ${TURBOJPEG_INCLUDE_DIRS}
 )
 
-#For good measure, we will include the directories as well
-target_include_directories(${PROJECT_NAME} PUBLIC
-    /usr/include/libcamera
-    ${ncnn_INCLUDE_DIRS} #${ncnn_INCLUDE_DIRS} #/home/pi/ncnn/build/install/include
-)
+add_executable(${PROJECT_NAME} camera_capture_v2.cpp save_jpeg.cpp event_loop.cpp ncnn_inference.cpp)
+
+target_link_libraries(${PROJECT_NAME} ncnn)
+target_link_libraries(${PROJECT_NAME} PkgConfig::TURBOJPEG)
+target_link_libraries(${PROJECT_NAME} PkgConfig::LIBCAMERA)
+target_link_libraries(${PROJECT_NAME} PkgConfig::OPENCV)
+target_link_libraries(${PROJECT_NAME} PkgConfig::LIBEVENT)
+

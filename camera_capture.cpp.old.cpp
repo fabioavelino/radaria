@@ -23,6 +23,8 @@
 // libjpeg-turbo header
 #include <turbojpeg.h>
 
+#include "ncnn_inference.h"
+
 using namespace std;
 using namespace libcamera;
 
@@ -195,7 +197,18 @@ int main() {
         } else {
             outFile.write(reinterpret_cast<char*>(jpegBuf), jpegSize);
             outFile.close();
-            cout << "Saved image to " << filename << endl;
+            std::cout << "Saved image to " << filename << std::endl;
+
+            // Perform inference on the saved image
+            //std::vector<std::string> detections = perform_inference(filename);
+
+            // Perform inference on the rgb buffer
+            perform_inference(rgbBuffer, width, height);
+
+            // Print detections
+            //for (const auto& detection : detections) {
+            //    std::cout << detection << std::endl;
+            //}
         }
 
         tjFree(jpegBuf);
